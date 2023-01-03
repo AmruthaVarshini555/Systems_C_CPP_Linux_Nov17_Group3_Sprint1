@@ -2,22 +2,54 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
-#include"header.h"
+#include"coordinator.h"
+#include"contestant.h"
+#include"admin.h"
 extern coordinator *c_root ;
-question_ans question_extraction_from_file(char *,question_ans);
-question_ans *QA_root[2];
+question_ans question_extraction_from_file(char * , question_ans);
+question_ans *QA_root[2] ;
+//Display question and answer
+void Display(question_ans *root)
+{
+	question_ans *q = root ;
+	while(q!=NULL)
+	{
+		printf("Q_n %d::",q->q_num);
+		printf("%s\n",q->question);		
+		if(q->check_flag == 1)
+		{
+			for(int i = 0 ; i < 4 ; i++)
+				printf("%c) %s\n",65+i,q->ans_string[i]);
+		}
+		else if(q->check_flag == 2)
+		{
+			for(int i = 0 ; i < 4 ; i++)
+				printf("%c) %d\n",65+i,q->ans_integer[i]);
+		}
+		if(q->ans_int == 1)
+			printf("ans:%c\n",'A');
+		else if(q->ans_int == 2)
+			printf("ans:%c\n",'B');
+		else if(q->ans_int == 3)
+			printf("ans:%c\n",'c');
+		else if(q->ans_int == 4)
+			printf("ans:%c\n",'D');
+			
+		q=q->next;
+	}
+}
 //Coordinator menu
 void Coordinator()
 {
 	system("clear");
-	int ch,exit_flag = 0;
+	int ch , exit_flag = 0;
 	char user_id[BUFFER_SIZE];
 	char question_str[QUESTION_BUFFER_SIZE];
 	char *quize_file = "updated_QA_file.txt";
 	char *quize_file_2 = "updated_QA_file_second.txt";
 	char temp[20];
 	design();
-	printf("Welcome to Coordinator \n");
+	printf("Welcome to Coordinator menu\n");
 	design();
 	QA_root[0] = NULL;
 	QA_root[1] = NULL;
@@ -35,15 +67,16 @@ void Coordinator()
 		scanf("%d",&ch);
 		switch(ch)
 		{
-			case UPDATE_COORD:
+			case UPDATE_COORDINATOR: //updating coordinator details
 				printf("enter user-id \n");
-				while(1){
+				while(1)
+				{
 					scanf("%s",user_id);
 					if(alpha_validator(user_id))
 						break;
 					else
-						printf("use only characters\n");
-				}
+						printf("use only characters\n");		
+				}	
 				if(update_coordinator(user_id , c_root) == NULL)
 				{
 					printf("user-id is not found please enter correct user id %s\n",user_id);
@@ -51,10 +84,10 @@ void Coordinator()
 				else 
 					printf("updated succesfully\n");
 				break;
-			case NEW_QUIZ: 
+			case ADD_QUIZ: //add new quiz for round 1 and round2
 				printf("enter 1 for first round\n");
 				printf("enter 2 for second round\n");
-				ch=int_ans_choice(1,2);
+				ch = int_ans_choice(1,2);	
 				if(ch == 1)
 				{
 					adding_question_to_file(quize_file);	
@@ -68,18 +101,17 @@ void Coordinator()
 					QA_root[1] = add_new_quiz(QA_root[1],quize_file_2);	
 				}
 				break ;
-			case UPDATE_QUIZ: 
+			case UPDATE_QUIZ: //Updating quiz for round1 and round2
 				printf("enter 1 for first round\n");
 				printf("enter 2 for second round\n");
-				//scanf("%d",&ch);
-				ch=int_ans_choice(1,2);
+				ch = int_ans_choice(1,2);	
 				if(ch == 1)
 				{
 					printf("enter the question \n");
 					getchar();
 					scanf("%[^\n]",question_str);
-					QA_root[0] = update_quiz(QA_root[0],question_str);
-					save_QA_info_into_file(QA_root[0],quize_file);
+					QA_root[0] = update_quiz(QA_root[0] , question_str);
+					save_QA_info_into_file(QA_root[0] , quize_file);
 				}
 				else if(ch == 2)
 				{
@@ -89,11 +121,11 @@ void Coordinator()
 					QA_root[1] = update_quiz(QA_root[1] , question_str);
 					save_QA_info_into_file(QA_root[1],quize_file_2);	
 				}	
-				break;
-			case DELETE_QUIZ: 
+				break ;
+			case DELETE_QUIZ: //Deletion of quiz for round 1 or round2
 				printf("enter 1 for first round\n");
 				printf("enter 2 for second round\n");
-				ch=int_ans_choice(1,2);
+				ch = int_ans_choice(1,2);	
 				if(ch == 1)
 				{
 					printf("enter question -id\n");
@@ -109,19 +141,18 @@ void Coordinator()
 					save_QA_info_into_file(QA_root[0] , quize_file_2);
 				}
 				break;
-			case DISPLAY_QUIZ:
+			case DISPLAY_QUIZ://Displaying questions for round1 and round2
 				printf("enter 1 for first round\n");
 				printf("enter 2 for second round\n");
-				//scanf("%d",&ch);
-				ch=int_ans_choice(1,2);
+				ch = int_ans_choice(1,2);	
 				if(ch == 1)
 				{
-					Disply(QA_root[0]);
+					Display(QA_root[0]);
 				}
 				else
-					Disply(QA_root[1]);
+					Display(QA_root[1]);
 				break;
-			case 6:
+			case EXIT:
 				exit_flag = 1;
 				break;
 		}
@@ -130,14 +161,13 @@ void Coordinator()
 	}
 }
 
-//Adding new quiz 
-question_ans *add_new_quiz(question_ans *QA_root,char *quize_file)
+//Adding new quiz
+question_ans *add_new_quiz(question_ans *QA_root , char *quize_file)
 {
-	
-	question_ans q_data;
-	char buffer[100];
-	FILE *fptr = NULL;
-	int counter = 0,index  = 0;
+	question_ans q_data ;
+	char buffer[100] ;
+	FILE *fptr = NULL ;
+	int counter = 0 , index  = 0;
 	fptr = fopen(quize_file,"r");
 	if(fptr == NULL)
 	{
@@ -162,13 +192,13 @@ question_ans *add_new_quiz(question_ans *QA_root,char *quize_file)
 	}	
 	return QA_root ;
 }
-//Extracting the answer for the questions from files
+//Extracting the question from file
 question_ans  question_extraction_from_file(char *str , question_ans q_a_data)
 {
-	int i = 0,str_num = 0;
+	int i = 0  , str_num = 0;
 	char temp[10];
 	char *piece = NULL;
-	int ans_index = 0,index =0,c_flag = 0;
+	int ans_index = 0  , index =0 , c_flag = 0;
 	//printf("str : %s\n",str);
 	while( *str != '\0' && *str != '\n')
 	{
@@ -191,7 +221,7 @@ question_ans  question_extraction_from_file(char *str , question_ans q_a_data)
 			}
 			else if(ans_index == 1)
 			{
-				str_num = atoi(piece);
+				str_num = atoi(piece) ;
 				if(str_num > 0)
 				{
 					if(c_flag == 1)
@@ -206,10 +236,9 @@ question_ans  question_extraction_from_file(char *str , question_ans q_a_data)
 					}
 					else if(index <= 3)
 					{
-						q_a_data.ans_intiger[index++] = str_num  ;
+						q_a_data.ans_integer[index++] = str_num  ;
 						//printf("int value: %d and index value %d\n",q_a_data.ans_intiger[index++],index-1);
-					}
-					
+					}	
 				}
 				else if(str_num == 0)
 				{
@@ -226,24 +255,9 @@ question_ans  question_extraction_from_file(char *str , question_ans q_a_data)
 	return q_a_data;	
 }
 
-//Creating list for question and answers
+//Creating list for question answers
 question_ans *create_list_for_QA(question_ans *source ,question_ans QA_DATA )
 {
-	/*printf("Q_n : %d\n",QA_DATA.q_num);
-	printf("question : %s\n",QA_DATA.question);
-	if(QA_DATA.check_flag == 1)
-	{
-		for(int i = 0 ; i < 4 ; i++)
-		printf("ans: %s\n",QA_DATA.ans_string[i]);
-	}
-	else if(QA_DATA.check_flag == 2)
-	{
-		for(int i = 0 ; i < 4 ; i++)
-		printf("ans_int: %d\n",QA_DATA.ans_intiger[i]);
-	}
-	printf("ans_str %s\n",QA_DATA.ans_str);
-	printf("ans_int : %d\n",QA_DATA.ans_int);
-	*/
 	if(source == NULL)
 	{
 		source  = (question_ans *)malloc(sizeof(question_ans));
@@ -254,7 +268,7 @@ question_ans *create_list_for_QA(question_ans *source ,question_ans QA_DATA )
 			source->check_flag = 1;
 			for(int i = 0 ; i < 4 ; i++)
 			{
-				strcpy(source->ans_string[i] , QA_DATA.ans_string[i]);
+				strcpy(source->ans_string[i] , QA_DATA.ans_string[i]);	
 			}
 			strcpy(source->ans_str ,QA_DATA.ans_str) ;
 		}
@@ -263,9 +277,9 @@ question_ans *create_list_for_QA(question_ans *source ,question_ans QA_DATA )
 			source->check_flag = 2;
 			for(int i = 0 ; i < 4 ; i++)
 			{
-				//printf("ans_int: %d\n",QA_DATA.ans_intiger[i]);
-				source->ans_intiger[i] = QA_DATA.ans_intiger[i];	
-			}	
+				//printf("ans_int: %d\n",QA_DATA.ans_integer[i]);
+				source->ans_integer[i] = QA_DATA.ans_integer[i] ;		
+			}
 		}
 		source->ans_int = QA_DATA.ans_int;
 		source->next = NULL;
@@ -277,9 +291,9 @@ question_ans *create_list_for_QA(question_ans *source ,question_ans QA_DATA )
 		 while(p->next != NULL)
 		 {
 		 	p = p->next;		 	
-		 } 
+		 }
 		temp->q_num = QA_DATA.q_num;
-		strcpy(temp->question,QA_DATA.question);
+		strcpy(temp->question , QA_DATA.question);
 		if(QA_DATA.check_flag == 1)
 		{
 			for(int i = 0 ; i < 4 ; i++)
@@ -296,44 +310,14 @@ question_ans *create_list_for_QA(question_ans *source ,question_ans QA_DATA )
 			{
 				//printf("ans_int: %d\n",QA_DATA.ans_integer[i]);
 				temp->check_flag = 2;
-				temp->ans_integer[i] = QA_DATA.ans_integer[i];		
+				temp->ans_intiger[i] = QA_DATA.ans_integer[i];	
 			}	
 		}
-		temp->ans_int = QA_DATA.ans_int;
-		p->next = temp;
+		temp->ans_int = QA_DATA.ans_int ;
+		p->next = temp ;
 		temp->next = NULL;	 
 	}
 	return source;	
-}
-
-void Display(question_ans *root)
-{
-	question_ans *q = root;
-	while(q!=NULL)
-	{
-		printf("Q_n %d::",q->q_num);
-		printf("%s\n",q->question);
-		if(q->check_flag == 1)
-		{
-			for(int i = 0;i < 4;i++)
-				printf("%c) %s\n",65+i,q->ans_string[i]);		
-		}
-		else if(q->check_flag == 2)
-		{
-			for(int i = 0 ; i < 4 ; i++)
-				printf("%c) %d\n",65+i,q->ans_intiger[i]);
-		}
-		if(q->ans_int == 1)
-			printf("ans:%c\n",'A');
-		else if(q->ans_int == 2)
-			printf("ans:%c\n",'B');
-		else if(q->ans_int == 3)
-			printf("ans:%c\n",'c');
-		else if(q->ans_int == 4)
-			printf("ans:%c\n",'D');
-			
-		q=q->next;
-	}
 }
 
 int str_check(char *str , char *str2)
@@ -349,7 +333,7 @@ int str_check(char *str , char *str2)
 	}
 	return 1;
 }
-//Updating the quiz
+//updating quiz
 question_ans *update_quiz(question_ans *QA_root ,char* question_str)
 {
 	if(QA_root == NULL)
@@ -370,7 +354,7 @@ question_ans *update_quiz(question_ans *QA_root ,char* question_str)
 				for(int i = 0 ; i < 4 ; i++)
 				{
 					printf("%d) %s\n",i, p->ans_string[i]);
-				}	
+				}
 			}
 			else if(p->check_flag == 2)
 			{
@@ -387,7 +371,7 @@ question_ans *update_quiz(question_ans *QA_root ,char* question_str)
 				getchar();
 				scanf("%[^\n]",p->question);
 				printf("enter 1) for string options \n");
-				printf("enter 2) for integer options\n");
+				printf("enter 2) for intiger options\n");
 				scanf("%d",&p->check_flag);
 				if(p->check_flag == 1)
 				{
@@ -411,8 +395,8 @@ question_ans *update_quiz(question_ans *QA_root ,char* question_str)
 	}
 	return QA_root ;
 }
-//Saving question and answers into a file
-void save_QA_info_into_file(question_ans *QA_root ,char *str)
+//Saving Questions into the file
+void save_QA_info_into_file(question_ans *QA_root , char *str)
 {
 	FILE *fptr = NULL;
 	if(QA_root == NULL)
@@ -421,7 +405,7 @@ void save_QA_info_into_file(question_ans *QA_root ,char *str)
 	}
 	else
 	{
-		question_ans *p = QA_root ;
+		question_ans *p = QA_root ;	
 		fptr = fopen(str,"w");
 		if(fptr == NULL)
 		{
@@ -461,7 +445,7 @@ void save_QA_info_into_file(question_ans *QA_root ,char *str)
 		}	
 	}
 }
-//Adding questions to file
+//Adding questions to the file
 void adding_question_to_file(char *str)
 {
 	char buffer[1000];
@@ -479,7 +463,7 @@ void adding_question_to_file(char *str)
 			scanf("%d",&id);
 			printf("enter the question\n");
 			getchar();
-			fgets(buffer,1000,stdin);
+			fgets(buffer , 1000 , stdin);
 			buffer[strlen(buffer)] = '\0';
 			printf("question :%s\n",buffer);
 			buffer[strlen(buffer)-1]= '\0';
@@ -489,15 +473,14 @@ void adding_question_to_file(char *str)
 				getchar();
 				scanf("%[^\n]s",options[i]);
 				printf("question :%s\n",options[i]);	
-			}	
+			}		
 			printf("enter the ans\n");
 			scanf("%d",&ans);
-			
 			fprintf(fptr,"%d,%s,%s,%s,%s,%s,%d\n",id ,buffer ,options[0],options[1],options[2],options[3],ans);		
 	}
 	fclose(fptr);		
 }
-//Length of the list of questions
+//Length of the questions list
 int* len_of_list_question(question_ans *source ,int *index)
 {
 	int count =0 ;
@@ -506,19 +489,19 @@ int* len_of_list_question(question_ans *source ,int *index)
 		printf("list is empty\n") ;
 		return NULL ;
 	}
-	question_ans *p = source ;
+	question_ans *p = source;
 	while(p!=NULL)
 	{
 		count ++;	
 		p = p->next ;
 	}
 	*index = count ;
-	return index ;	
+	return index;	
 }
-//Searching for question
+//Searching for the question
 int *lookup_question(question_ans *source,int id ,int *index) 
 {
-	int count = 1,check_flag = 0;
+	int count = 1 , check_flag = 0;
 	 if(source ==  NULL)
 	 {
 		printf("list is empty\n") ;
@@ -536,13 +519,12 @@ int *lookup_question(question_ans *source,int id ,int *index)
 			if(q->check_flag == 1)
 			{
 				for(int i = 0 ; i < 4 ; i++)
-					printf("%c) %s\n",65+i,q->ans_string[i]);
-					
+					printf("%c) %s\n",65+i,q->ans_string[i]);		
 			}
 			else if(q->check_flag == 2)
 			{
 				for(int i = 0 ; i < 4 ; i++)
-					printf("%c) %d\n",65+i,q->ans_intiger[i]);
+					printf("%c) %d\n",65+i,q->ans_integer[i]);
 			}
 			break;
 		}
@@ -558,20 +540,18 @@ int *lookup_question(question_ans *source,int id ,int *index)
 	}
 	else
 		*index = -1;
-	
 	return index ;
 }
-
+//Deletion of questions 
 question_ans *delete_question(question_ans *source , int question_num)
 {
-	
-	int position = 0,len = 0 ,link =1;
+	int position = 0,len = 0,link =1;
 	char ch ;
 	if(source ==  NULL)
 	{
 		printf("list is empty\n") ;
 		return NULL ;
-	} 
+	 } 
 	question_ans *p = source ;
 	question_ans *temp = source  ;
 	position = *lookup_question(p,question_num,&position) ; 
@@ -608,6 +588,33 @@ question_ans *delete_question(question_ans *source , int question_num)
 		}
 	}
 	else 
-		printf("user-id is  not deleted\n");	
+	printf("user-id is  not deleted\n");	
 	return source;			
+}
+
+int int_ans_choice(int n , int m)
+{
+	int ch;
+	char temp[10];
+		while(1)
+		{
+			scanf("%s",temp);
+			if(integer_validation(temp) == 0)
+			{
+				ch = atoi(temp);
+				if(ch >= n && ch <= m)
+				{
+					ch = atoi(temp);
+					break;
+				}
+				else 
+					printf("enter number with range of %d to %d \n",n,m);	
+			}
+			else
+			{
+				printf(" int enter valid input\n");
+				return -1;
+			}
+		}
+	return ch;
 }
