@@ -5,6 +5,7 @@
 #include"coordinator.h"
 #include"contestant.h"
 #include"admin.h"
+#include"header.h"
 extern coordinator *c_root ;
 question_ans question_extraction_from_file(char * , question_ans);
 question_ans *QA_root[2] ;
